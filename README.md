@@ -46,7 +46,7 @@ Reshape into a table
    ▼
 Save as CSV
 
-## Data Sources — OpenAQ Location IDs
+## Data Sources - OpenAQ Location IDs
 
 Stations used:
 
@@ -117,7 +117,7 @@ air-quality-etl-ml-pipeline/
 Pull historical data for one station:
 
 ```bash
-python src/ingestion/openaq_pipeline.py --location_id <ID> --start 2017-01-01 --end 2025-12-31 --out data/raw/<station_name>.csv
+python src/ingestion/openaq_pipeline.py --location_id <ID> --start [start_date] --end [end_date] --out data/raw/<station_name>.csv
 ```
 
 For Teku:
@@ -145,8 +145,7 @@ python src/ingestion/openaq_pipeline.py --location_id 6142022 --start 2025-11-25
 
 1. Reindexes each station to a full hourly timeline (makes missing hours explicit NaN rows).
 2. Adds a was_missing flag column before interpolating.
-3. Interpolates gaps ≤ 3 hours (limit=3, limit_area="inside").
-Leaves gaps > 3 hours as NaN.
+3. Interpolates gaps ≤ 3 hours (limit=3, limit_area="inside"). Leaves gaps > 3 hours as NaN.
 4. Adds a station column and concatenates both stations into one file (not averaged).
 5. Output: data/processed/kathmandu_merged.csv
 
@@ -158,7 +157,7 @@ Mid Baneshwor	57.0%	1,318 hrs
 
 ## Feature Engineering (notebooks/feature_engineering.ipynb)
 
-Target: target_pm25_next_1h — PM2.5 one hour ahead, via groupby("station")["pm25"].shift(-1).
+Target: target_pm25_next_1h - PM2.5 one hour ahead, via groupby("station")["pm25"].shift(-1).
 
 Time features: hour, day_of_week, month, is_weekend (Saturday only).
 
