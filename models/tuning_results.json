@@ -13,8 +13,8 @@
   },
   "tuned_avg_rmse": 12.874689916425178,
   "tuned_avg_r2": 0.7802821916360692,
-  "untuned_avg_rmse": 15.443761553491566,
-  "untuned_avg_r2": 0.7198817371971076,
+  "untuned_avg_rmse": 13.643805300538636,
+  "untuned_avg_r2": 0.7695486142373869,
   "persistence_avg_rmse": 14.519869256712715,
   "persistence_avg_r2": 0.7249966435965041
 }
