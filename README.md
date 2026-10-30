@@ -1,10 +1,10 @@
 # Air Quality Prediction using an End-to-End Data Pipeline and Explainable Machine Learning
 
-Predicting AQI for data-scarce Kathmandu, and using SHAP to explain what drives AQI spikes (traffic, weather, seasonal burning) - not just forecasting the numbers.
+Predicting PM2.5 for data-scarce Kathmandu, and using SHAP to explain what drives PM2.5 spikes (traffic, weather, seasonal burning) - not just forecasting the numbers.
 
 ## Project Overview
 
-This project builds a full pipeline: data ingestion → cleaning → feature engineering → model training → SHAP explainability → dashboard. Data is pulled from [OpenAQ](https://openaq.org), using Kathmandu Metropolitan City's AirGradient Node-S sensor stations.
+This project builds a full pipeline: data ingestion → cleaning → feature engineering → model training → SHAP explainability → dashboard. Data is pulled from [OpenAQ](https://openaq.org), using Green Decision Labs' AirGradient sensor stations.
 
 ## Commit Convention
 
@@ -94,7 +94,8 @@ air-quality-etl-ml-pipeline/
 │   ├── xgboost_tuned_final.pkl
 │   ├── tuning_results.json
 │   ├── shap_values.npy
-│   └── shap_feature_importance.csv
+│   ├── shap_feature_importance.csv
+│   └── shap_season_share.csv
 ├── notebooks/                 # run in this order
 │   ├── check_data.ipynb            # 1. raw data checks, gap analysis
 │   ├── clean_data.ipynb            # 2. reindexing, interpolation, merging
@@ -171,7 +172,7 @@ Raw completeness found:
 
 Station	Completeness	Longest gap
 Teku	63.9%	391 hrs
-Mid Baneshwor	57.1%	1,318 hrs
+Mid Baneshwor	57.0%	1,318 hrs
 
 ## ACF / PACF Analysis (notebooks/acf_pacf_analysis.ipynb)
 
@@ -242,11 +243,11 @@ Compares four approaches on the same folds, all predicting absolute next-hour PM
 | Model | RMSE | MAE | R² |
 |---|---|---|---|
 | Naive persistence | 14.51 | 9.40 | 0.726 |
-| Random Forest (full features) | 16.34 | 10.72 | 0.676 |
+| Random Forest (full features) | 16.41 | 10.73 | 0.675 |
 | Random Forest (pm25 only) | 18.02 | - | 0.567 |
-| Linear Regression (full features) | 19.75 | - | 0.537 |
+| Linear Regression (full features) | 19.82 | - | 0.524 |
 
-None of the models beat persistence (RF: -17.0% RMSE vs persistence). This motivated reframing the target.
+None of the models beat persistence (RF: -17.4% RMSE vs persistence). This motivated reframing the target.
 
 Output: models/baseline_results.json
 
@@ -257,7 +258,7 @@ Output: models/baseline_results.json
 3. Reconstructs the absolute prediction as current pm25 + predicted delta and scores it against the true next-hour value.
 4. Compares against persistence on the same folds and plots feature importances for the delta model.
 
-Result: Delta RF RMSE 15.68, R² 0.669. Improves on the absolute RF (16.34) but still -8.1% vs persistence.
+Result: Delta RF RMSE 15.65, R² 0.677. Improves on the absolute RF (16.41) but still -7.9% vs persistence.
 
 ## Main Model (notebooks/main_model.ipynb)
 
@@ -269,31 +270,33 @@ Ablation results:
 
 | Model | RMSE | MAE | R² | Mean skill | Folds beating persistence |
 |---|---|---|---|---|---|
-| XGBoost (delta) | 13.54 | 8.53 | 0.772 | +0.032 | 4/5 |
-| XGBoost (absolute) | 16.20 | 11.12 | 0.634 | -0.208 | 3/5 |
-| Random Forest (delta) | 15.68 | 10.73 | 0.669 | -0.170 | 2/5 |
-| Random Forest (absolute) | 16.23 | 10.65 | 0.688 | -0.147 | 2/5 |
+| XGBoost (delta) | 13.62 | 8.58 | 0.770 | +0.027 | 4/5 |
+| XGBoost (absolute) | 16.18 | 11.08 | 0.635 | -0.206 | 3/5 |
+| Random Forest (delta) | 15.65 | 10.73 | 0.677 | -0.161 | 2/5 |
+| Random Forest (absolute) | 16.20 | 10.65 | 0.688 | -0.146 | 2/5 |
 | Naive persistence | 14.51 | 9.40 | 0.726 | 0 | - |
 
-XGBoost on the delta target is the only approach that beats persistence on average (+6.7% RMSE). The delta target lowers XGBoost RMSE by 16.4% vs the absolute target. Fold 3 (Apr-Jun) is the hardest; every model loses to persistence there.
+XGBoost on the delta target is the only approach that beats persistence on average (+6.2% RMSE). The delta target lowers XGBoost RMSE by 15.8% vs the absolute target. Fold 3 (Apr-Jun) is the hardest; every model loses to persistence there.
 
 Output: models/xgboost_delta_model.pkl, models/main_model_results.json
 
 ## Hyperparameter Tuning (notebooks/hyperparameter_tuning.ipynb)
 
-1. RandomizedSearchCV (n_iter=50, 250 fits) over n_estimators, max_depth, learning_rate, subsample, colsample_bytree, min_child_weight, reg_alpha, reg_lambda, using the same TimeSeriesSplit and neg RMSE on the delta target.
-2. Re-evaluates the best parameters per fold on absolute PM2.5.
+1. RandomizedSearchCV (n_iter=50, 250 fits) over n_estimators, max_depth, learning_rate, subsample, colsample_bytree, min_child_weight, reg_alpha, reg_lambda, using TimeSeriesSplit and neg RMSE on the delta target, on the development period only (before 2026-08-01).
+2. Re-evaluates the best parameters per fold on absolute PM2.5, then scores the hold-out period (2026-08-01 to 2026-09-03) once.
 3. Trains the final model on all data and saves it.
 
 Best parameters: n_estimators=200, max_depth=4, learning_rate=0.01, subsample=0.6, colsample_bytree=0.6, min_child_weight=3, reg_alpha=0.1, reg_lambda=1.5.
 
 | Model | RMSE | R² |
 |---|---|---|
-| Tuned XGBoost (delta) | 12.87 | 0.780 |
-| Main model XGBoost (delta, 100/0.05/3) | 13.54 | 0.772 |
-| Naive persistence | 14.52 | 0.725 |
+| Tuned XGBoost (delta) | 14.50 | 0.810 |
+| Main model XGBoost (delta, 100/0.05/3) | 14.92 | 0.804 |
+| Naive persistence | 16.69 | 0.745 |
 
-Tuned model: +11.3% RMSE vs persistence, about 5.6% better than the main model.
+Tuned model (development CV): +13.1% RMSE vs persistence, about 2.8% better than the main model.
+
+Hold-out (never used for tuning): RMSE 6.56, MAE 4.27, R² 0.636 vs persistence RMSE 7.05, i.e. +6.9%.
 
 Output: models/xgboost_tuned_final.pkl, models/tuning_results.json
 
@@ -303,7 +306,7 @@ Uses shap.TreeExplainer (exact SHAP values for tree models) on the final tuned X
 
 1. Global importance (mean |SHAP| bar plot) and beeswarm plot.
 2. Dependence plots for the top 4 features.
-3. Local force plots for the largest actual increase and largest actual drop.
+3. Local force plots for the largest predicted increase and largest actual drop.
 4. Seasonal comparison: winter (Dec-Feb) vs monsoon (Jun-Aug).
 5. Station comparison: Teku vs Mid Baneshwor.
 
@@ -312,26 +315,26 @@ Top features by mean |SHAP|, per station:
 | Rank | Feature | Teku | Mid Baneshwor |
 |---|---|---|---|
 | 1 | hour_sin | 1.93 | 1.84 |
-| 2 | pm25_lag_9h | 1.45 | 1.45 |
-| 3 | hour_cos | 1.11 | 1.04 |
-| 4 | um003 | 1.03 | 1.04 |
-| 5 | pm25_lag_1h | 1.01 | 0.94 |
-| 6 | pm25 | 0.88 | 0.84 |
-| 7 | pm25_lag_8h | 0.46 | 0.46 |
-| 8 | pm25_rolling_mean_6h | 0.41 | 0.40 |
-| 9 | WS10M | 0.40 | 0.40 |
-| 10 | temperature | 0.33 | 0.36 |
-| 11 | month_cos | 0.32 | 0.30 |
-| 12 | hour | 0.26 | 0.24 |
+| 2 | pm25_lag_9h | 1.43 | 1.44 |
+| 3 | hour_cos | 1.10 | 1.04 |
+| 4 | um003 | 1.01 | 1.03 |
+| 5 | pm25_lag_1h | 1.02 | 0.95 |
+| 6 | pm25 | 0.89 | 0.85 |
+| 7 | pm25_lag_8h | 0.47 | 0.47 |
+| 8 | WS10M | 0.41 | 0.41 |
+| 9 | pm25_rolling_mean_6h | 0.41 | 0.40 |
+| 10 | temperature | 0.31 | 0.35 |
+| 11 | month_cos | 0.33 | 0.32 |
+| 12 | hour | 0.25 | 0.23 |
 
 Key findings:
 
 - Time of day (hour_sin/cos) is the strongest driver of hourly PM2.5 change, consistent with the rush-hour diurnal cycle.
 - pm25_lag_9h ranks second, matching the 7-9h PACF peaks (roughly the gap between the morning and evening peaks).
 - um003 (count of particles >0.3 µm) is a strong leading signal for PM2.5 change.
-- Winter SHAP magnitudes are about 1.5-3x monsoon for most features; wind speed matters about 3.7x more in winter (0.71 vs 0.19).
+- Winter SHAP magnitudes are about 1.5-3x monsoon for most features; wind speed matters about 3.2x more in winter (0.64 vs 0.20).
 - Teku and Mid Baneshwor have almost identical driver rankings.
-- The model under-predicts extreme spikes: for the largest increase (2026-04-02 22:15 UTC, 67.6 → 258.0, +190.4) it predicted only +2.5. For the largest drop (2026-01-23, -142.1) it predicted -55.8.
+- The model under-predicts extreme spikes: for the largest increase (2026-04-02 22:15 UTC, 67.6 → 258.0, +190.4) it predicted only +3.0. For the largest drop (2026-01-23, -142.1) it predicted -56.4.
 
-Output: models/shap_values.npy, models/shap_feature_importance.csv
+Output: models/shap_values.npy, models/shap_feature_importance.csv, models/shap_season_share.csv
 

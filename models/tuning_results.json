@@ -1,6 +1,6 @@
 {
   "model": "XGBoost (tuned, delta target)",
-  "validation": "TimeSeriesSplit (5 folds), RandomizedSearchCV (n_iter=50)",
+  "validation": "Dev period (before 2026-08-01): TimeSeriesSplit (5 folds), RandomizedSearchCV (n_iter=50); hold-out: 2026-08-01 onward",
   "best_params": {
     "subsample": 0.6,
     "reg_lambda": 1.5,
@@ -11,10 +11,15 @@
     "learning_rate": 0.01,
     "colsample_bytree": 0.6
   },
-  "tuned_avg_rmse": 12.874689916425178,
-  "tuned_avg_r2": 0.7802821916360692,
-  "untuned_avg_rmse": 13.643805300538636,
-  "untuned_avg_r2": 0.7695486142373869,
-  "persistence_avg_rmse": 14.519869256712715,
-  "persistence_avg_r2": 0.7249966435965041
+  "tuned_avg_rmse": 14.496979689677053,
+  "tuned_avg_r2": 0.8097801335625109,
+  "untuned_avg_rmse": 14.915006704374415,
+  "untuned_avg_r2": 0.803725013701864,
+  "persistence_avg_rmse": 16.689843529537963,
+  "persistence_avg_r2": 0.74472323458834,
+  "holdout_rmse": 6.564927835961687,
+  "holdout_mae": 4.2656187102639915,
+  "holdout_r2": 0.6356653438787934,
+  "holdout_persistence_rmse": 7.048489880902269,
+  "holdout_skill": 0.06860505627606606
 }
