@@ -1,12 +1,12 @@
 {
   "model": "XGBoost (delta target)",
-  "validation": "TimeSeriesSplit (5 folds)",
-  "xgb_avg_rmse": 13.615309523165639,
-  "xgb_avg_r2": 0.7702932180960903,
-  "rf_delta_avg_rmse": 15.652537152967565,
-  "rf_delta_avg_r2": 0.6767834516550131,
-  "persistence_avg_rmse": 14.511115226016543,
-  "persistence_avg_r2": 0.7255070407611046,
+  "validation": "TimeSeriesSplit (5 folds), development period only (before 2026-08-01)",
+  "xgb_avg_rmse": 14.88605702423612,
+  "xgb_avg_r2": 0.8054490311860036,
+  "rf_delta_avg_rmse": 16.726514401117605,
+  "rf_delta_avg_r2": 0.7092023080809385,
+  "persistence_avg_rmse": 16.692070273574704,
+  "persistence_avg_r2": 0.7459026417860521,
   "hyperparameters": {
     "n_estimators": 100,
     "learning_rate": 0.05,
@@ -16,37 +16,51 @@
   },
   "ablation_summary": {
     "xgb_delta": {
-      "mean_rmse": 13.6153,
-      "mean_mae": 8.5772,
-      "mean_r2": 0.7703,
-      "mean_skill": 0.0267,
+      "mean_rmse": 14.8861,
+      "mean_mae": 9.4894,
+      "mean_r2": 0.8054,
+      "mean_skill": 0.0602,
       "folds_beating_persist": 4
     },
     "xgb_absolute": {
-      "mean_rmse": 16.1784,
-      "mean_mae": 11.083,
-      "mean_r2": 0.6354,
-      "mean_skill": -0.2056,
-      "folds_beating_persist": 3
+      "mean_rmse": 17.7061,
+      "mean_mae": 12.1423,
+      "mean_r2": 0.6231,
+      "mean_skill": -0.225,
+      "folds_beating_persist": 2
     },
     "rf_delta": {
-      "mean_rmse": 15.6525,
-      "mean_mae": 10.7256,
-      "mean_r2": 0.6768,
-      "mean_skill": -0.1609,
+      "mean_rmse": 16.7265,
+      "mean_mae": 11.5149,
+      "mean_r2": 0.7092,
+      "mean_skill": -0.1261,
       "folds_beating_persist": 2
     },
     "rf_absolute": {
-      "mean_rmse": 16.2041,
-      "mean_mae": 10.6481,
-      "mean_r2": 0.6885,
-      "mean_skill": -0.146,
+      "mean_rmse": 17.8895,
+      "mean_mae": 12.3585,
+      "mean_r2": 0.6551,
+      "mean_skill": -0.2129,
       "folds_beating_persist": 2
     },
+    "lr_delta": {
+      "mean_rmse": 18.8105,
+      "mean_mae": 13.5867,
+      "mean_r2": 0.6603,
+      "mean_skill": -0.1857,
+      "folds_beating_persist": 1
+    },
+    "lr_absolute": {
+      "mean_rmse": 18.8105,
+      "mean_mae": 13.5867,
+      "mean_r2": 0.6603,
+      "mean_skill": -0.1857,
+      "folds_beating_persist": 1
+    },
     "persistence": {
-      "mean_rmse": 14.5111,
-      "mean_mae": 9.3985,
-      "mean_r2": 0.7255,
+      "mean_rmse": 16.6921,
+      "mean_mae": 10.8655,
+      "mean_r2": 0.7459,
       "mean_skill": 0.0,
       "folds_beating_persist": 0
     }
