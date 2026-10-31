@@ -23,12 +23,12 @@
       "r2": 0.5241349017657543
     }
   },
-  "rf_mean_skill_vs_persistence": -0.17441100576276783,
+  "rf_mean_skill_vs_persistence": -0.17441100576276788,
   "per_fold": [
     {
       "fold": 1,
       "full_features_rmse": 23.188487372354306,
-      "full_features_r2": 0.695262573210183,
+      "full_features_r2": 0.6952625732101831,
       "persist_rmse": 25.79708763338069,
       "persist_r2": 0.6227322373061973,
       "rmse_pm25_only": 29.362477881169333,
@@ -87,13 +87,13 @@
     },
     {
       "fold": 4,
-      "full_features_rmse": 10.600266345522071,
-      "full_features_r2": 0.5896875399521637,
+      "full_features_rmse": 10.600266345522073,
+      "full_features_r2": 0.5896875399521636,
       "persist_rmse": 7.738198331914655,
       "persist_r2": 0.7793537092604381,
       "rmse_pm25_only": 12.70552748987883,
-      "mae_pm25_only": 9.513974498320984,
-      "r2_pm25_only": 0.41052342622087057,
+      "mae_pm25_only": 9.513974498320982,
+      "r2_pm25_only": 0.4105234262208707,
       "rmse_linreg": 11.277942666413997,
       "mae_linreg": 8.345244045467844,
       "r2_linreg": 0.5355479168308585,
@@ -103,17 +103,17 @@
       "n_test": 1390,
       "rf_mae": 7.742698254558598,
       "persist_mae": 4.887961740810148,
-      "rf_skill_vs_persist": -0.3698623233528906
+      "rf_skill_vs_persist": -0.3698623233528908
     },
     {
       "fold": 5,
-      "full_features_rmse": 6.503596667406322,
+      "full_features_rmse": 6.503596667406323,
       "full_features_r2": 0.6400045600936876,
       "persist_rmse": 7.025198459871177,
       "persist_r2": 0.5794553967678433,
       "rmse_pm25_only": 8.25911363612878,
       "mae_pm25_only": 5.730605386177668,
-      "r2_pm25_only": 0.4194272028992936,
+      "r2_pm25_only": 0.4194272028992937,
       "rmse_linreg": 7.728730178552758,
       "mae_linreg": 5.778475754574014,
       "r2_linreg": 0.491599356876817,
@@ -123,7 +123,7 @@
       "n_test": 1390,
       "rf_mae": 4.295769243262266,
       "persist_mae": 4.6726368876080695,
-      "rf_skill_vs_persist": 0.07424726795183234
+      "rf_skill_vs_persist": 0.07424726795183223
     }
   ]
 }

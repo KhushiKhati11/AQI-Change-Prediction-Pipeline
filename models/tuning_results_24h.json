@@ -1,0 +1,26 @@
+{
+  "horizon": 24,
+  "model": "XGBoost (tuned, delta target)",
+  "validation": "Dev period (before 2026-08-01): TimeSeriesSplit (5 folds), RandomizedSearchCV (n_iter=50); hold-out: 2026-08-01 onward",
+  "best_params": {
+    "subsample": 1.0,
+    "reg_lambda": 1,
+    "reg_alpha": 0.1,
+    "n_estimators": 300,
+    "min_child_weight": 3,
+    "max_depth": 2,
+    "learning_rate": 0.01,
+    "colsample_bytree": 0.6
+  },
+  "tuned_avg_rmse": 28.055797797910042,
+  "tuned_avg_r2": 0.2205195986022816,
+  "untuned_avg_rmse": 29.19352778515316,
+  "untuned_avg_r2": 0.10868625469863795,
+  "persistence_avg_rmse": 30.46080663062914,
+  "persistence_avg_r2": 0.14229519565263152,
+  "holdout_rmse": 11.31347001242388,
+  "holdout_mae": 8.622965409233595,
+  "holdout_r2": -0.07381691956351077,
+  "holdout_persistence_rmse": 11.061843969803986,
+  "holdout_skill": -0.022747205918540292
+}

@@ -1,4 +1,5 @@
 {
+  "horizon": 1,
   "model": "XGBoost (tuned, delta target)",
   "validation": "Dev period (before 2026-08-01): TimeSeriesSplit (5 folds), RandomizedSearchCV (n_iter=50); hold-out: 2026-08-01 onward",
   "best_params": {
@@ -11,15 +12,15 @@
     "learning_rate": 0.01,
     "colsample_bytree": 0.6
   },
-  "tuned_avg_rmse": 14.496979689677053,
-  "tuned_avg_r2": 0.8097801335625109,
-  "untuned_avg_rmse": 14.915006704374415,
-  "untuned_avg_r2": 0.803725013701864,
-  "persistence_avg_rmse": 16.689843529537963,
-  "persistence_avg_r2": 0.74472323458834,
-  "holdout_rmse": 6.564927835961687,
-  "holdout_mae": 4.2656187102639915,
-  "holdout_r2": 0.6356653438787934,
+  "tuned_avg_rmse": 14.509143159677041,
+  "tuned_avg_r2": 0.8092325747985656,
+  "untuned_avg_rmse": 14.895082836339043,
+  "untuned_avg_r2": 0.8039851435257723,
+  "persistence_avg_rmse": 16.689425914540056,
+  "persistence_avg_r2": 0.7445036758774083,
+  "holdout_rmse": 6.5609364844908225,
+  "holdout_mae": 4.262443553555751,
+  "holdout_r2": 0.6361082263118305,
   "holdout_persistence_rmse": 7.048489880902269,
-  "holdout_skill": 0.06860505627606606
+  "holdout_skill": 0.06917132671672865
 }

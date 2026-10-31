@@ -4,11 +4,11 @@ Predicting PM2.5 for data-scarce Kathmandu, and using SHAP to explain what drive
 
 ## Project Overview
 
-This project builds a full pipeline: data ingestion → cleaning → feature engineering → model training → SHAP explainability → dashboard. Data is pulled from [OpenAQ](https://openaq.org), using Green Decision Labs' AirGradient sensor stations.
+This project builds a full pipeline: data ingestion → cleaning → feature engineering → model training → SHAP explainability → dashboard (planned). Data is pulled from [OpenAQ](https://openaq.org), using Green Decision Labs' AirGradient sensor stations.
 
 ## Commit Convention
 
-This project follows [Conventional Commits](https://www.conventionalcommits.org/):
+This project follows [Conventional Commits]:
 
 | Prefix | Use for |
 |---|---|
@@ -91,8 +91,11 @@ air-quality-etl-ml-pipeline/
 │   ├── baseline_results.json
 │   ├── xgboost_delta_model.pkl
 │   ├── main_model_results.json
-│   ├── xgboost_tuned_final.pkl
-│   ├── tuning_results.json
+│   ├── xgboost_tuned_final_{h}h.pkl      # h = 1, 3, 6, 12, 24
+│   ├── tuning_results_{h}h.json          # h = 1, 3, 6, 12, 24
+│   ├── cv_predictions_{h}h.csv           # h = 1, 3, 6, 12, 24
+│   ├── holdout_predictions_{h}h.csv      # h = 1, 3, 6, 12, 24
+│   ├── horizon_results.csv
 │   ├── shap_values.npy
 │   ├── shap_feature_importance.csv
 │   └── shap_season_share.csv
@@ -191,7 +194,7 @@ The very high lag-1 correlation means next-hour PM2.5 is mostly explained by the
 
 ## Feature Engineering (notebooks/feature_engineering.ipynb)
 
-Target: target_pm25_next_1h - PM2.5 one hour ahead, via groupby("station")["pm25"].shift(-1).
+Target: target_pm25_next_1h - PM2.5 one hour ahead, via groupby("station")["pm25"].shift(-1). Longer-horizon targets target_pm25_next_3h/6h/12h/24h are built the same way (shift(-h)); model notebooks exclude all target_ columns from the features.
 
 Dropped: pm1 (correlation with pm25 = 0.994, redundant).
 
@@ -229,11 +232,12 @@ Key observations:
 - Teku has higher median PM2.5 (55.4) than Mid Baneshwor (50.5).
 - Diurnal peaks are at hours 2 and 15 UTC, which is about 07:45 and 20:45 Nepal time (UTC+05:45), i.e. morning and evening rush hours. All hour features are in UTC.
 
-## Validation Setup (all model notebooks)
+## Validation Setup (baseline, delta target and main model notebooks)
 
 - TimeSeriesSplit with 5 folds (expanding window). Each fold trains on all earlier data and tests on the next ~1,390 rows, so the model never sees the future.
 - Test windows: Fold 1 Dec 24 - Jan 30, Fold 2 Jan 30 - Apr 4, Fold 3 Apr 4 - Jun 6, Fold 4 Jun 6 - Jul 30, Fold 5 Jul 30 - Sep 3.
 - Metrics: RMSE, MAE, R² on absolute next-hour PM2.5, averaged across folds.
+- The tuning notebook uses its own folds on the development period (before 2026-08-01) plus a hold-out; see Hyperparameter Tuning.
 - Reference baseline: naive persistence (prediction = current PM2.5). Skill = 1 - RMSE_model / RMSE_persistence; above 0 means the model beats persistence.
 
 ## Baseline Models (notebooks/baseline_model.ipynb)
@@ -282,27 +286,42 @@ Output: models/xgboost_delta_model.pkl, models/main_model_results.json
 
 ## Hyperparameter Tuning (notebooks/hyperparameter_tuning.ipynb)
 
-1. RandomizedSearchCV (n_iter=50, 250 fits) over n_estimators, max_depth, learning_rate, subsample, colsample_bytree, min_child_weight, reg_alpha, reg_lambda, using TimeSeriesSplit and neg RMSE on the delta target, on the development period only (before 2026-08-01).
-2. Re-evaluates the best parameters per fold on absolute PM2.5, then scores the hold-out period (2026-08-01 to 2026-09-03) once.
-3. Trains the final model on all data and saves it.
+Set `horizon` (1, 3, 6, 12 or 24) in the first cell and run the notebook once per horizon.
 
-Best parameters: n_estimators=200, max_depth=4, learning_rate=0.01, subsample=0.6, colsample_bytree=0.6, min_child_weight=3, reg_alpha=0.1, reg_lambda=1.5.
+1. RandomizedSearchCV (n_iter=50, 250 fits) over n_estimators, max_depth, learning_rate, subsample, colsample_bytree, min_child_weight, reg_alpha, reg_lambda, using TimeSeriesSplit and neg RMSE on the delta target, on the development period only (before 2026-08-01, ending `horizon` hours early). TimeSeriesSplit uses gap=2*horizon.
+2. Re-evaluates the best parameters per fold on absolute PM2.5, then scores the hold-out period (2026-08-01 to 2026-09-03) once.
+3. Saves the CV and hold-out predictions (actual vs predicted) as CSV.
+4. Trains the final model on all data and saves it.
+
+Best parameters (1 h): n_estimators=200, max_depth=4, learning_rate=0.01, subsample=0.6, colsample_bytree=0.6, min_child_weight=3, reg_alpha=0.1, reg_lambda=1.5.
 
 | Model | RMSE | R² |
 |---|---|---|
-| Tuned XGBoost (delta) | 14.50 | 0.810 |
-| Main model XGBoost (delta, 100/0.05/3) | 14.92 | 0.804 |
+| Tuned XGBoost (delta) | 14.51 | 0.809 |
+| Main model XGBoost (delta, 100/0.05/3) | 14.90 | 0.804 |
 | Naive persistence | 16.69 | 0.745 |
 
-Tuned model (development CV): +13.1% RMSE vs persistence, about 2.8% better than the main model.
+Tuned model (development CV): +13.1% RMSE vs persistence, about 2.6% better than the main model.
 
-Hold-out (never used for tuning): RMSE 6.56, MAE 4.27, R² 0.636 vs persistence RMSE 7.05, i.e. +6.9%.
+Hold-out (never used for tuning): RMSE 6.56, MAE 4.26, R² 0.636 vs persistence RMSE 7.05, i.e. +6.9%.
 
-Output: models/xgboost_tuned_final.pkl, models/tuning_results.json
+Results by forecast horizon (models/horizon_results.csv):
+
+| Horizon | CV RMSE | CV persistence | CV skill | Hold-out RMSE | Hold-out persistence | Hold-out skill |
+|---|---|---|---|---|---|---|
+| 1 h | 14.51 | 16.69 | +13.1% | 6.56 | 7.05 | +6.9% |
+| 3 h | 21.99 | 31.17 | +29.5% | 9.53 | 12.01 | +20.6% |
+| 6 h | 25.22 | 41.26 | +38.9% | 9.76 | 15.02 | +35.1% |
+| 12 h | 27.07 | 35.01 | +22.7% | 12.14 | 12.53 | +3.1% |
+| 24 h | 28.06 | 30.46 | +7.9% | 11.31 | 11.06 | -2.3% |
+
+Model error grows steadily with the horizon, but persistence error peaks at 6 h and falls at 12-24 h because of the daily cycle, so skill peaks at about 6 h. The model adds real value up to about 6-12 h ahead.
+
+Output: models/xgboost_tuned_final_{h}h.pkl, models/tuning_results_{h}h.json, models/cv_predictions_{h}h.csv, models/holdout_predictions_{h}h.csv, models/horizon_results.csv
 
 ## SHAP Explainability (notebooks/shap_analysis.ipynb)
 
-Uses shap.TreeExplainer (exact SHAP values for tree models) on the final tuned XGBoost. Since the model predicts the delta, SHAP values explain what drives PM2.5 to rise or fall in the next hour, which directly targets spikes.
+Uses shap.TreeExplainer (exact SHAP values for tree models) on the final tuned 1-hour XGBoost (models/xgboost_tuned_final_1h.pkl). Since the model predicts the delta, SHAP values explain what drives PM2.5 to rise or fall in the next hour, which directly targets spikes.
 
 1. Global importance (mean |SHAP| bar plot) and beeswarm plot.
 2. Dependence plots for the top 4 features.
